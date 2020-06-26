@@ -13,10 +13,6 @@ class DockerResource : Resource {
         TODO("Not yet implemented")
     }
 
-    override fun run() {
-        TODO("Not yet implemented")
-    }
-
     override fun delete() {
         TODO("Not yet implemented")
     }
