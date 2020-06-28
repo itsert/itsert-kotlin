@@ -1,6 +1,9 @@
 package com.opefago
 
+import com.opefago.core.Project
+
 
 fun main(args: Array<String>){
-    System.out.println("Hello world!!")
+    println("Hello world!!")
+    Project.instance.run()
 }

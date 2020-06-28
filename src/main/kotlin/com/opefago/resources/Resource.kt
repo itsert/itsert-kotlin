@@ -1,9 +1,9 @@
 package com.opefago.resources
 
-import com.opefago.configuration.Configuration
+import com.opefago.utils.Container
 
-interface Resource {
-    fun init(config: Configuration)
+interface Resource{
     fun pull()
+    fun build() : Container
     fun delete()
 }

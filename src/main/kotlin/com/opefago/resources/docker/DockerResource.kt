@@ -1,19 +1,39 @@
 package com.opefago.resources.docker
 
-import com.opefago.configuration.Configuration
+import com.github.dockerjava.api.DockerClient
+import com.github.dockerjava.api.command.PullImageResultCallback
+import com.github.dockerjava.api.exception.NotFoundException
+import com.opefago.configuration.ServiceConfiguration
 import com.opefago.resources.Resource
+import com.opefago.utils.Container
 
-class DockerResource : Resource {
 
-    override fun init(config: Configuration) {
-        TODO("Not yet implemented")
+class DockerResource (private val client: DockerClient, private val config: ServiceConfiguration)
+    : Resource {
+    private var createdImage = false
+    override fun pull(){
+        try {
+            val images = client.listImagesCmd().withImageNameFilter(config.image).exec()
+            if (images.isEmpty()) {
+                createdImage = true
+                client.pullImageCmd(config.image!!).exec(PullImageResultCallback()).awaitCompletion()
+            }
+
+        }catch (e: NotFoundException){
+            println("Image not found")
+        }
+
     }
 
-    override fun pull() {
-        TODO("Not yet implemented")
+    override fun build(): Container {
+        return Container.create(client, config, null, null)
     }
 
     override fun delete() {
-        TODO("Not yet implemented")
+        if(createdImage) {
+            client.listImagesCmd().withImageNameFilter(config.image).exec().forEach {
+                client.removeImageCmd(it.id).exec()
+            }
+        }
     }
 }
