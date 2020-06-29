@@ -5,10 +5,12 @@ import com.github.dockerjava.api.command.PullImageResultCallback
 import com.github.dockerjava.api.exception.NotFoundException
 import com.opefago.configuration.ServiceConfiguration
 import com.opefago.resources.Resource
-import com.opefago.utils.Container
+import com.opefago.resources.container.Container
 
 
-class DockerResource (private val client: DockerClient, private val config: ServiceConfiguration)
+class DockerResource (
+        private val client: DockerClient,
+        private val config: ServiceConfiguration)
     : Resource {
     private var createdImage = false
     override fun pull(){
@@ -26,7 +28,7 @@ class DockerResource (private val client: DockerClient, private val config: Serv
     }
 
     override fun build(): Container {
-        return Container.create(client, config, null, null)
+        return Container.create(client, config)
     }
 
     override fun delete() {

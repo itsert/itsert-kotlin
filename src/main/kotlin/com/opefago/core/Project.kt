@@ -9,10 +9,11 @@ import com.github.dockerjava.httpclient5.ApacheDockerHttpClient
 import com.github.dockerjava.transport.DockerHttpClient
 import com.opefago.configuration.ConfigParser
 import com.opefago.configuration.NetworkConfiguration
-import com.opefago.configuration.VolumeConfiguration
+import com.opefago.configuration.ServiceConfiguration
 import com.opefago.exceptions.ImageNotFoundException
-import com.opefago.utils.Container
-import com.opefago.utils.Network
+import com.opefago.resources.container.Container
+import com.opefago.resources.docker.DockerResource
+import com.opefago.resources.network.Network
 import com.opefago.utils.Volume
 import mu.KLogging
 import java.io.File
@@ -47,34 +48,35 @@ class Project private constructor(){
         val instance: Project by lazy { HOLDER.INSTANCE }
         val INTEGRATION_CONFIGS = listOf<String>("IntegrationConfig", "IntegrationConfig.yml", "IntegrationConfig.yaml")
     }
-    private lateinit var containers: Map<String, Container>
-//    private lateinit var services: Map<String, Service>
-    private lateinit var network: Map<String, Network>
-    private lateinit var volumes: Map<String, Volume>
+    private lateinit var containers: MutableMap<String, Container>
+    private lateinit var network: MutableMap<String, Network>
+    private lateinit var volumes: MutableMap<String, Volume>
     fun run(){
         try {
-
             val parser = ConfigParser()
             val path = INTEGRATION_CONFIGS.first {
                 File(it).exists()
             }
             val file = File(path)
             val configuration = parser.parse(file)
-//            val dockerResource = DockerResource(dockerClient, configuration)
-//            logger.info("Pulling image")
-//            dockerResource.pull()
-//            logger.info("Creating container")
-//            val container = dockerResource.build()
-//            logger.info("Starting container")
-//            container.start()
-//            logger.info("Stopping container")
-//            container.stop()
-//            logger.info("Removing container")
-//            container.remove()
-//            logger.info("Deleting image")
-//            dockerResource.delete()
-//            logger.info("Stopping container")
-//            container.stop()
+            containers = mutableMapOf()
+            network = mutableMapOf()
+            volumes = mutableMapOf()
+            if(configuration.networks != null){
+                logger.info("Creating Network")
+                val networkConfigs = configuration.networks.map {
+                    it.value.withName(it.key)
+                }
+                processNetworks(dockerClient, networkConfigs)
+            }
+
+            if(configuration.services != null) {
+                val serviceConfigs = configuration.services.map {
+                    it.value.withName(it.key)
+                }
+
+                buildContainers(dockerClient, serviceConfigs)
+            }
         }catch (e: ImageNotFoundException){
             logger.info(e.message)
             exitProcess(1)
@@ -90,7 +92,31 @@ class Project private constructor(){
         }
     }
 
-    private fun parseVolumes(config: VolumeConfiguration){}
-    private fun parseNetworks(config: NetworkConfiguration){}
-    private fun parseContainers(config: NetworkConfiguration){}
+//    private fun parseVolumes(configs: List<VolumeConfiguration>){
+//    }
+    private fun processNetworks(client: DockerClient, configs: List<NetworkConfiguration>){
+        configs.forEach {
+            val net = Network.create(client, it)
+            network[it.name] = net
+
+        }
+    }
+
+    private fun buildContainers(client: DockerClient, configs: List<ServiceConfiguration>){
+        configs.forEach {
+            val dockerResource = DockerResource(client, it)
+            logger.info("pulling Image")
+            dockerResource.pull()
+
+            logger.info("Building Container")
+            val cont = dockerResource.build()
+            if(it.networks != null){
+                it.networks.forEach {networkIt->
+                    val network = network[networkIt]
+                    network?.connect(cont.id())
+                }
+            }
+            containers[it.name] = cont
+        }
+    }
 }

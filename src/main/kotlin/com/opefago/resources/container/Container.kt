@@ -1,4 +1,4 @@
-package com.opefago.utils
+package com.opefago.resources.container
 
 import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.async.ResultCallback
@@ -51,12 +51,12 @@ class Container private constructor (
             }
         }
 
-        fun createFromId(client: DockerClient, containerId: String): Container{
+        fun createFromId(client: DockerClient, containerId: String): Container {
             return Container(client, containerId)
         }
     }
 
-    fun id() = client.inspectContainerCmd(containerId).exec().state.pidLong
+    fun id() = client.inspectContainerCmd(containerId).exec().id
 
     fun name(name: String) = client.inspectContainerCmd(containerId).exec().name
 

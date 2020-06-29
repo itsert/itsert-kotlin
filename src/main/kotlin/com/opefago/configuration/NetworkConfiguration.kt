@@ -32,5 +32,9 @@ data class NetworkConfiguration (
         val attachable: Boolean = false,
         val ipam: Ipam = Ipam(),
         val options: List<String> = emptyList()
-
-)
+){
+        fun withName(name: String): NetworkConfiguration{
+                this.name = name
+                return this
+        }
+}

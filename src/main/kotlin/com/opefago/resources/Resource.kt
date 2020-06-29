@@ -1,6 +1,6 @@
 package com.opefago.resources
 
-import com.opefago.utils.Container
+import com.opefago.resources.container.Container
 
 interface Resource{
     fun pull()
