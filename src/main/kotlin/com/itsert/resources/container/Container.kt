@@ -20,6 +20,14 @@ class Container private constructor (
                 config: ServiceConfiguration
                 ) : Container {
             try {
+                val containers = client
+                        .listContainersCmd()
+                        .withShowAll(true)
+                        .withNameFilter(listOf(config.name))
+                        .exec()
+                if(containers.isNotEmpty()){
+                    return Container(client, containers[0].id)
+                }
                 val portBindings = mutableListOf<PortBinding>()
                 config.ports?.forEach{
                     portBindings.add(PortBinding.parse(it))

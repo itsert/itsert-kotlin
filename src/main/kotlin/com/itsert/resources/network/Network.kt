@@ -14,6 +14,14 @@ class Network private constructor(
 
     companion object : KLogging(){
         fun create(client: DockerClient, config: NetworkConfiguration): Network{
+            val foundNetwork = client
+                    .listNetworksCmd()
+                    .withNameFilter(config.name)
+                    .exec()
+
+            if(foundNetwork.isNotEmpty()){
+                return Network(client, foundNetwork[0].id)
+            }
             val network = createNetworkCmd(client, config)
             val networkId = network.exec().id
             return Network(client, networkId)

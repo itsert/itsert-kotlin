@@ -30,6 +30,7 @@ dependencies {
     implementation 'org.antlr:antlr4-runtime:4.8'
     implementation 'com.github.ajalt:mordant:1.2.1'
     implementation 'com.diogonunes:JColor:5.0.0'
+    implementation "org.assertj:assertj-core:3.17.1"
 }
 
 compileKotlin {

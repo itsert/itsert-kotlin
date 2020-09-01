@@ -45,6 +45,7 @@ test "Let the cows come"{
         print i;
         i = i + 1;
     }
+    assert 2 > 1;
 }
 
 sayHello();

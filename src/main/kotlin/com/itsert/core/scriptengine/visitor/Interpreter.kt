@@ -1,5 +1,6 @@
 package com.itsert.core.scriptengine.visitor
 
+import com.itsert.core.Project
 import com.itsert.core.scriptengine.environments.Scope
 import com.itsert.logger.ILogger
 import com.itsert.core.scriptengine.parser.ITDLBaseVisitor
@@ -11,6 +12,8 @@ import com.itsert.exceptions.ReturnException
 import com.itsert.exceptions.RuntimeError
 import org.antlr.v4.runtime.Token
 import java.lang.IllegalStateException
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.Test
 
 class Interpreter : ITDLBaseVisitor<Any>() {
     var currentScope: Scope
@@ -38,7 +41,8 @@ class Interpreter : ITDLBaseVisitor<Any>() {
     }
 
     override fun visitStmtAssert(ctx: ITDLParser.StmtAssertContext?): Any {
-        return super.visitStmtAssert(ctx)
+        assertThat((visit(ctx?.assertionExpr()) as BooleanExpression).value).isEqualTo(true)
+        return ReturnTypes.NONE
     }
 
     override fun visitStmtTestDcl(ctx: ITDLParser.StmtTestDclContext?): Any {
@@ -125,7 +129,14 @@ class Interpreter : ITDLBaseVisitor<Any>() {
     }
 
     override fun visitDependencesDclrExpr(ctx: ITDLParser.DependencesDclrExprContext?): Any {
-        println("${ctx!!.dependencesOptions().text} are ${ctx.stringList().ID()}")
+        if(ctx!!.dependencesOptions().text == "services"){
+            ctx.stringList().ID().forEach {
+                if(Project.instance.getContainers().containsKey(it.text))
+                    Project.instance.getContainers()[it.text]?.start()
+                else
+                    throw RuntimeError("${it.text} is not a registered service", ctx.start)
+            }
+        }
         return ReturnTypes.NONE
     }
 

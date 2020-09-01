@@ -64,7 +64,7 @@ class Project private constructor(){
     fun getContainers(): Map<String, Container> = containers
 
     fun run(){
-//        runAppConfigs()
+        runAppConfigs()
 
         runScripts()
         try {
@@ -97,9 +97,8 @@ class Project private constructor(){
             network = mutableMapOf()
             volumes = mutableMapOf()
 
-            defaultNetwork = Network.create(dockerClient, NetworkConfiguration(
-                    name = "default_integration"
-            ))
+            logger.info("Creating Default Network")
+            createDefaultNetwork(dockerClient)
 
             if(configuration.networks != null){
                 logger.info("Creating Network")
@@ -128,6 +127,12 @@ class Project private constructor(){
         }
     }
 
+    private fun createDefaultNetwork(client: DockerClient){
+        defaultNetwork = Network.create(client, NetworkConfiguration(
+                name = "default_integration"
+        ))
+    }
+
 
     //    private fun parseVolumes(configs: List<VolumeConfiguration>){
 //    }
@@ -135,7 +140,6 @@ class Project private constructor(){
         configs.forEach {
             val net = Network.create(client, it)
             network[it.name] = net
-
         }
     }
 
