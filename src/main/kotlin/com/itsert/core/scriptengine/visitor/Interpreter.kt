@@ -16,7 +16,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 
 class Interpreter : ITDLBaseVisitor<Any>() {
-    var currentScope: Scope
+    private var currentScope: Scope
     private val globalScope = Scope()
 
     init {
@@ -40,6 +40,7 @@ class Interpreter : ITDLBaseVisitor<Any>() {
         return ReturnTypes.NONE
     }
 
+    @Test
     override fun visitStmtAssert(ctx: ITDLParser.StmtAssertContext?): Any {
         assertThat((visit(ctx?.assertionExpr()) as BooleanExpression).value).isEqualTo(true)
         return ReturnTypes.NONE
@@ -130,11 +131,9 @@ class Interpreter : ITDLBaseVisitor<Any>() {
 
     override fun visitDependencesDclrExpr(ctx: ITDLParser.DependencesDclrExprContext?): Any {
         if(ctx!!.dependencesOptions().text == "services"){
-            ctx.stringList().ID().forEach {
-                if(Project.instance.getContainers().containsKey(it.text))
-                    Project.instance.getContainers()[it.text]?.start()
-                else
-                    throw RuntimeError("${it.text} is not a registered service", ctx.start)
+            val services = ctx.stringList().ID().map {  it.text}
+            Project.run {
+                instance.startServices(services, ctx.start)
             }
         }
         return ReturnTypes.NONE

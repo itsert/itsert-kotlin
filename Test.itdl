@@ -1,4 +1,4 @@
-depends on services farm, tree;
+depends on services es;
 
 var a = 10 + 1;
 print a + 1;
@@ -28,7 +28,7 @@ fun sayHello(){
 
 print sum(23, 5);
 
-for(i in "How are you doing\""){
+for(i in "How are you doing "){
     print i;
 }
 
@@ -47,5 +47,3 @@ test "Let the cows come"{
     }
     assert 2 > 1;
 }
-
-sayHello();

@@ -3,7 +3,6 @@ package com.itsert.core
 import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.exception.ConflictException
 import com.github.dockerjava.core.DefaultDockerClientConfig
-import com.github.dockerjava.core.DockerClientConfig
 import com.github.dockerjava.core.DockerClientImpl
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient
 import com.github.dockerjava.transport.DockerHttpClient
@@ -14,6 +13,7 @@ import com.itsert.core.scriptengine.parser.ITDLLexer
 import com.itsert.core.scriptengine.parser.ITDLParser
 import com.itsert.core.scriptengine.visitor.Interpreter
 import com.itsert.exceptions.ImageNotFoundException
+import com.itsert.exceptions.RuntimeError
 import com.itsert.resources.container.Container
 import com.itsert.resources.docker.DockerResource
 import com.itsert.resources.network.Network
@@ -23,6 +23,7 @@ import mu.KLogging
 import org.antlr.v4.runtime.CharStream
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
+import org.antlr.v4.runtime.Token
 import org.antlr.v4.runtime.tree.ParseTree
 import java.io.File
 import java.io.IOException
@@ -32,7 +33,7 @@ import kotlin.system.exitProcess
 class Project private constructor(){
     private val dockerClient: DockerClient
     init {
-        val standard: DockerClientConfig = DefaultDockerClientConfig.createDefaultConfigBuilder()
+        val standard = DefaultDockerClientConfig.createDefaultConfigBuilder()
                 .build()
 //        val custom: DockerClientConfig = DefaultDockerClientConfig.createDefaultConfigBuilder()
 //                .withDockerHost("tcp://localhost:2376")
@@ -49,39 +50,39 @@ class Project private constructor(){
                 .build()
         dockerClient = DockerClientImpl.getInstance(standard, httpClient)
     }
+
     private object HOLDER {
         val INSTANCE = Project()
     }
 
     companion object : KLogging() {
         val instance: Project by lazy { HOLDER.INSTANCE }
-        val INTEGRATION_CONFIGS = listOf<String>("IntegrationConfig", "IntegrationConfig.yml", "IntegrationConfig.yaml")
+        val INTEGRATION_CONFIGS =
+                listOf("IntegrationConfig", "IntegrationConfig.yml", "IntegrationConfig.yaml")
+        const val DEFAULT_NETWORK = "default_integration"
     }
     private lateinit var containers: MutableMap<String, Container>
     private lateinit var network: MutableMap<String, Network>
     private lateinit var volumes: MutableMap<String, Volume>
     private lateinit var defaultNetwork: Network
-    fun getContainers(): Map<String, Container> = containers
 
     fun run(){
-        runAppConfigs()
-
-        runScripts()
         try {
+            runAppConfigs()
 
-
-        }catch (e: ImageNotFoundException){
-            logger.info(e.message)
-            exitProcess(1)
-        }catch (e: ConflictException){
-            logger.info(e.message)
-            exitProcess(1)
-        }catch (e: NoSuchElementException){
-            logger.info("There is no IntegrationConfig file found in path")
-            exitProcess(1)
+            runScripts()
         }
         finally {
             //House Cleaning goes here
+        }
+    }
+
+    fun startServices(names: List<String>, token: Token){
+        names.forEach {
+            if(containers.containsKey(it))
+                containers[it]?.start()
+            else
+                throw RuntimeError("$it is not a registered service", token)
         }
     }
 
@@ -129,7 +130,7 @@ class Project private constructor(){
 
     private fun createDefaultNetwork(client: DockerClient){
         defaultNetwork = Network.create(client, NetworkConfiguration(
-                name = "default_integration"
+                name = DEFAULT_NETWORK
         ))
     }
 
@@ -151,6 +152,8 @@ class Project private constructor(){
 
             logger.info("Building Container")
             val cont = dockerResource.build()
+
+            logger.info("Adding network to containers")
             if(it.networks != null){
                 it.networks.forEach {networkIt->
                     val network = network[networkIt]
