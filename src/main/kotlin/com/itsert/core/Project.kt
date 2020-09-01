@@ -66,14 +66,24 @@ class Project private constructor(){
     private lateinit var volumes: MutableMap<String, Volume>
     private lateinit var defaultNetwork: Network
 
-    fun run(){
-        try {
-            runAppConfigs()
+    fun run() = try {
+        runAppConfigs()
 
-            runScripts()
+        runScripts()
+    }
+    finally {
+        logger.info("Tearing down all resources")
+
+        logger.info("Tearing down containers")
+        containers.forEach { (_, u) ->
+            if(u.isRunning()!!){
+                u.stop()
+            }
+            u.remove()
         }
-        finally {
-            //House Cleaning goes here
+        logger.info("Tearing down networks")
+        network.forEach { (_, u) ->
+            u.delete()
         }
     }
 
