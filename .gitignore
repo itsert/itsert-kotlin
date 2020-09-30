@@ -98,20 +98,13 @@ crashlytics-build.properties
 hs_err_pid*
 
 
-/src/main/java/com/kudi/labs/
-
-/src/main/java/com/kudi/core/services/billing/BillingServiceDemo.java
 
 *.rdb
 /bin/
 
-#Slack Team Controller for debugging only
-/src/main/java/com/kudi/api/controllers/TestController.java
 
 env.txt
 helper.sh
-src/main/java/com/kudi/api/resources/RequestModel.java
-src/main/java/com/kudi/api/resources/PaymentServiceResponseModel.java
 gradle.properties
 
 AuthenticationControllerTest.groovy

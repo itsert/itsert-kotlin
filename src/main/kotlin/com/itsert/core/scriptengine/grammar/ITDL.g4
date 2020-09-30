@@ -23,26 +23,26 @@ returnStmt: RETURN expr?;
 dependencesDclrExpr
     :   DEPENDS ON dependencesOptions  stringList?;
 
-stringList :  ID (',' ID)*;
+stringList :  Id (',' Id)*;
 
 varDeclare: VAR subDeclare SEMI;
-subDeclare: ID (ASSIGN expr)?;
+subDeclare: Id (ASSIGN expr)?;
 
 dependencesOptions
     :   (SERVICES);
 
-functionCall: ID L_PAREN functionCallParameters? R_PAREN;
+functionCall: Id L_PAREN functionCallParameters? R_PAREN;
 
-functionCallParameters: ((ID | expr) (COMMA (ID | expr))*);
+functionCallParameters: ((Id | expr) (COMMA (Id | expr))*);
 
 functionDclrExpr
-    :   FUNCTION ID L_PAREN formalParamters? R_PAREN block
+    :   FUNCTION Id L_PAREN formalParamters? R_PAREN block
     ;
-formalParamters: (ID (COMMA ID)*);
+formalParamters: (Id (COMMA Id)*);
 
 testDclrExpr
-    :   TEST (ID | STRING) block
-    |   SCENERIO (ID | STRING) block
+    :   TEST (Id | STRING) block
+    |   SCENERIO (Id | STRING) block
     ;
 
 setupStmt
@@ -59,19 +59,19 @@ conditionalExpr
     ;
 
 whileStatement: WHILE L_PAREN expr R_PAREN thenStatement;
-forStatement   : FOR L_PAREN ID IN (rangeExpr | list| ID | STRING) R_PAREN thenStatement ;
+forStatement   : FOR L_PAREN Id IN (rangeExpr | list| Id | STRING) R_PAREN thenStatement ;
 
 elseCondition: ELSE (IF  L_PAREN expr R_PAREN)? elseStatement;
 thenStatement:  ( block | statement);
 elseStatement: ( block | statement);
 expr
     :   L_PAREN expr R_PAREN #ExprParen
-    |   ID  #ExprRef
+    |   Id  #ExprRef
     |   INT #ExprInt
     |   NUMBER  #ExprNum
     |   STRING  #ExprStr
     |   rangeExpr  #ExprRange
-    |   ID L_SQUARE INT R_SQUARE #ExprListIndex
+    |   Id L_SQUARE INT R_SQUARE #ExprListIndex
     |   subDeclare #ExprReAssign
     |   expr ('*'|'/') expr #ExprMultDiv
     |   expr ('+'|'-') expr #ExprAddSub
@@ -91,7 +91,7 @@ expr
 rangeExpr: INT ELLIPSIS INT;
 list    : L_SQUARE (value (COMMA value)*)? R_SQUARE
     ;
-value: (INT | NUMBER| BOOL| STRING| ID);
+value: (INT | NUMBER| BOOL| STRING| Id);
 bool
     :    (TRUE | FALSE);
 
@@ -139,8 +139,7 @@ TEARDOWN: T E A R D O W N;
 RETURN: R E T U R N;
 BOOL: (TRUE | FALSE);
 
-ID      : [a-zA-Z]+;
-INDEX_ID: [$a-zA-Z]+;
+ALPHA   :  [a-zA-Z];
 STRING: '"' (Esc|.)*? '"';
 DOT  : '.';
 L_PAREN :   '(';
@@ -162,7 +161,7 @@ NEWLINE :   ('\r'? '\n') -> channel(HIDDEN);
 WS      :   [ \t\r\n]    -> channel(HIDDEN);
 LINE_COMMENT    : '//'  ~[\r\n]* -> channel(HIDDEN);
 BLOCK_COMMENT   : '/*'  (.)*? '*/' -> channel(HIDDEN);
-
+fragment Id  : ('-' | '_'| ALPHA)+;
 fragment Esc
     : '\\' [btnfr"'\\]
     | '\\' ([0-3]? [0-7])? [0-7]

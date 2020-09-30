@@ -1,59 +1,119 @@
 package com.itsert.core
 
-import com.github.dockerjava.api.DockerClient
-import com.github.dockerjava.api.async.ResultCallback
-import com.github.dockerjava.api.model.*
 import com.itsert.configuration.ServiceConfiguration
-import com.itsert.resources.container.Container
+import com.itsert.utils.Utils.Companion.NAMESPACE
+import com.itsert.utils.Utils.Companion.splitPortPair
+import io.fabric8.kubernetes.api.model.*
+import io.fabric8.kubernetes.api.model.apps.Deployment
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder
+import io.fabric8.kubernetes.client.DefaultKubernetesClient
+import io.fabric8.kubernetes.client.KubernetesClient
+import java.util.*
+import java.util.concurrent.TimeUnit
 
-class Service(
-        private val client: DockerClient,
-        private val serviceConfiguration: ServiceConfiguration
-){
-    private val serviceId: String
-    private val containers : List<Container>
-    init {
-        val replicas = ServiceReplicatedModeOptions()
-                .withReplicas(serviceConfiguration.replica?:1)
-        val mode = ServiceModeConfig().withReplicated(replicas)
-        val spec = ServiceSpec()
-                .withName(serviceConfiguration.name)
-                .withMode(mode)
-        if(serviceConfiguration.networks != null){
-            spec.withNetworks(serviceConfiguration.networks.map { NetworkAttachmentConfig().withTarget(it) })
-        }else{
+
+class Service private constructor(
+        private val client: KubernetesClient,
+        private val config: ServiceConfiguration,
+        private val deployment: Deployment,
+        private val service: io.fabric8.kubernetes.api.model.Service
+) {
+    companion object{
+        private const val SERVICE_TYPE = "NodePort"
+        fun create(config: ServiceConfiguration): Service{
+            val client: KubernetesClient = DefaultKubernetesClient()
+            val deployment = createDeployment(config)
+            val service = createService(config)
+            return Service(client, config, deployment, service)
+        }
+
+        private fun createService(config: ServiceConfiguration): io.fabric8.kubernetes.api.model.Service{
+            val servicePorts: MutableList<ServicePort> = ArrayList()
+            config.ports?.forEach {
+                val servicePort = ServicePort()
+                val ports = splitPortPair(it)
+
+                servicePort.name = "http"
+                servicePort.port = ports.first.toInt()
+                servicePort.targetPort = IntOrString(ports.second.toInt())
+                servicePorts.add(servicePort)
+            }
+            return ServiceBuilder()
+                    .withNewMetadata()
+                    .withNamespace(NAMESPACE)
+                    .withName("${config.name}-service")
+                    .withLabels(mapOf("app" to  config.name))
+                    .endMetadata()
+                    .withNewSpec()
+                    .withType(SERVICE_TYPE)
+                    .withPorts(servicePorts)
+                    .withSelector(mapOf("app" to config.name))
+                    .endSpec()
+                    .withNewStatus()
+                    .endStatus().build()
 
         }
-        serviceId = client.createServiceCmd(spec).exec().id
-        client.logServiceCmd(serviceId).withStdout(true)
-                .withStderr(true)
-                .exec(object : ResultCallback.Adapter<Frame?>() {
-                    @Override
-                    fun onNext(frame: Frame) {
-                        Container.logger.info(frame.payload.toString())
-                    }
-                })
-        containers = client.listContainersCmd()
-                .withNameFilter(listOf(serviceConfiguration.name))
-                .exec()
-                . map { Container.createFromId(client, it.id) }
+        private fun createDeployment(config: ServiceConfiguration): Deployment{
+            val containerPorts = mutableListOf<ContainerPort>()
+            config.ports?.forEach {
+                val containerPort = ContainerPort()
+                val ports = splitPortPair(it)
+
+                containerPort.name = "http"
+                containerPort.containerPort = ports.second.toInt()
+                containerPort.protocol = "TCP"
+                containerPorts.add(containerPort)
+            }
+            return DeploymentBuilder()
+                    .withNewMetadata()
+                    .withName(config.name)
+                    .withLabels(mapOf("app" to config.name))
+                    .endMetadata()
+                    .withNewSpec()
+                    .withNewSelector()
+                    .withMatchLabels(mapOf("app" to config.name))
+                    .endSelector()
+                    .withReplicas(config.replica)
+                    .withNewTemplate()
+                    .withNewMetadata()
+                    .addToLabels("app", config.name)
+                    .endMetadata()
+                    .withNewSpec()
+                    .addNewContainer()
+                    .withName(config.name)
+                    .withImage(config.image)
+                    .withPorts(containerPorts)
+                    .endContainer()
+                    .endSpec()
+                    .endTemplate()
+                    .endSpec()
+                    .build()
+        }
     }
+
+    init {
+        client.apps().deployments().inNamespace(NAMESPACE).createOrReplace(deployment)
+        client.services().inNamespace(NAMESPACE).createOrReplace(service)
+    }
+
     fun start(){
-        containers.forEach {
-            it.start()
-        }
+        client.apps()
+                .deployments()
+                .inNamespace(NAMESPACE)
+                .withName(config.name)
+                .scale(config.replica, true)
     }
 
     fun stop(){
-        containers.forEach {
-            it.stop()
-        }
+        client.apps()
+                .deployments()
+                .inNamespace(NAMESPACE)
+                .withName(config.name)
+                .scale(0, true)
     }
-    fun updateService(){
-        val spec = ServiceSpec()
-        client.updateServiceCmd(serviceId, spec).exec()
-    }
+
     fun delete(){
-        client.removeServiceCmd(serviceId).exec()
+        client.services().inNamespace(NAMESPACE).delete(service)
+        client.apps().deployments().inNamespace(NAMESPACE).delete(deployment)
     }
 }

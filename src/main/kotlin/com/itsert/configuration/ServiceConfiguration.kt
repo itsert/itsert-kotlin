@@ -10,7 +10,7 @@ data class ServiceConfiguration(
         val image: String? = null,
         val tag: String? = null,
         val hash: String? = null,
-        val replica: Int? = null,
+        val replica: Int = 1,
         val expose: List<String>? = null,
         val networks: List<String>? = null,
         val volumes: List<String>? = null,

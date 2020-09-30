@@ -1,4 +1,4 @@
-depends on services es;
+depends on services hell, echoserver, web;
 
 var a = 10 + 1;
 print a + 1;

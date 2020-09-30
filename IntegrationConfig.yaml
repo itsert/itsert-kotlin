@@ -1,20 +1,17 @@
 version: "3"
 services:
-  es:
-    image: docker.elastic.co/elasticsearch/elasticsearch:6.3.2
-    environment:
-      - discovery.type=single-node
+  echoserver:
+    image: gcr.io/google_containers/echoserver:1.4
+    replica: 1
     ports:
-      - 9200:9200
-    volumes:
-      - esdata1:/usr/share/elasticsearch/data
+      - "8080:8080"
+  hell:
+    image: errm/cheese:stilton
+    replica: 1
+    ports:
+      - "8000:80"
   web:
-    image: prakhar1989/foodtrucks-web
-    command: python3 app.py
+    image: gcr.io/kubernetes-e2e-test-images/echoserver:2.1
+    replica: 1
     ports:
-      - 5000:5000
-    volumes:
-      - ./flask-app:/opt/flask-app
-volumes:
-  esdata1:
-    driver: local
+      - "8080:8080"

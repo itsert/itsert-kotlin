@@ -1,66 +1,61 @@
 package com.itsert.resources.network
 
-import com.github.dockerjava.api.DockerClient
-import com.github.dockerjava.api.command.CreateNetworkCmd
-import com.itsert.configuration.NetworkConfiguration
-import com.itsert.utils.Utils
+import com.itsert.configuration.ServiceConfiguration
+import com.itsert.utils.Utils.Companion.DEFAULT_NETWORK
+import com.itsert.utils.Utils.Companion.NAMESPACE
+import com.itsert.utils.Utils.Companion.splitPortPair
+import io.fabric8.kubernetes.api.model.IntOrString
+import io.fabric8.kubernetes.api.model.extensions.*
+import io.fabric8.kubernetes.client.KubernetesClient
 import mu.KLogging
-import com.github.dockerjava.api.model.Network as GitNetwork
+
 
 class Network private constructor(
-        private val client: DockerClient,
-        private val networkId: String
+        private val client: KubernetesClient,
+        private val ingress: Ingress
 ) {
-
     companion object : KLogging(){
-        fun create(client: DockerClient, config: NetworkConfiguration): Network{
-            val foundNetwork = client
-                    .listNetworksCmd()
-                    .withNameFilter(config.name)
-                    .exec()
-
-            if(foundNetwork.isNotEmpty()){
-                return Network(client, foundNetwork[0].id)
-            }
-            val network = createNetworkCmd(client, config)
-            val networkId = network.exec().id
-            return Network(client, networkId)
+        fun create(client: KubernetesClient, config: Map<String, ServiceConfiguration>): Network{
+            val ingress = createIngress(config)
+            return Network(client, ingress)
         }
 
-        private fun createNetworkCmd(client: DockerClient, config: NetworkConfiguration)
-                : CreateNetworkCmd {
-            val network = client.createNetworkCmd()
-            network.withDriver(config.driver)
-            network.withInternal(config.internal)
-            network.withAttachable(config.attachable)
-            network.withEnableIpv6(config.enableIpv6)
-            network.withCheckDuplicate(true)
-            network.withName(config.name)
-            val ipam = GitNetwork.Ipam()
-            ipam.withDriver(config.ipam.driver)
-            val configs = config.ipam.config?.map {
-                GitNetwork.Ipam.Config()
-                        .withGateway(it.gateway)
-                        .withIpRange(it.ipRange)
-                        .withSubnet(it.subnet)
+        private fun createIngress(config: Map<String, ServiceConfiguration>): Ingress {
+            val httpIngressRule = HTTPIngressRuleValue()
+            val httpIngressPaths = mutableListOf<HTTPIngressPath>()
+            config.forEach{
+                val ingressBackend = IngressBackend()
+                ingressBackend.serviceName =  "${it.key}-service"
+                ingressBackend.servicePort = IntOrString(splitPortPair(it.value.ports!![0]).first.toInt())
+                val httpIngressPath = HTTPIngressPath()
+                httpIngressPath.backend = ingressBackend
+                httpIngressPath.path = "/${it.key}"
+                httpIngressPaths.add(httpIngressPath)
             }
-            ipam.withDriver(config.ipam.driver)
-            ipam.withConfig(configs)
-            network.withIpam(ipam)
-            val options = config.options.associateBy( {Utils.splitPair(it).first}, {Utils.splitPair(it).second})
-            network.withOptions(options)
-            return network
+
+            httpIngressRule.paths = httpIngressPaths
+
+            val ingressRule = IngressRule()
+            ingressRule.http = httpIngressRule
+
+            return IngressBuilder()
+                    .withNewMetadata()
+                    .withName(DEFAULT_NETWORK)
+                    .endMetadata()
+                    .withNewSpec()
+                    .withRules(listOf(ingressRule))
+                    .endSpec()
+                    .build()
         }
     }
 
-    fun connect(containerId: String){
-        client.connectToNetworkCmd().withContainerId(containerId)
-                .withNetworkId(networkId)
-                .exec()
+    fun connect() : Boolean{
+        client.extensions().ingresses().inNamespace(NAMESPACE).createOrReplace(ingress)
+        return true
     }
 
     fun delete(){
-        client.removeNetworkCmd(networkId).exec()
+        client.extensions().ingresses().inNamespace(NAMESPACE).delete(ingress)
     }
 
 }
