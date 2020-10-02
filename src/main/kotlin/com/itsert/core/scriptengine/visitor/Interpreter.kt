@@ -2,6 +2,8 @@ package com.itsert.core.scriptengine.visitor
 
 import com.itsert.core.Project
 import com.itsert.core.scriptengine.environments.Scope
+import com.itsert.core.scriptengine.function.Callable
+import com.itsert.core.scriptengine.function.inbuilt.HttpFunction
 import com.itsert.logger.ILogger
 import com.itsert.core.scriptengine.parser.ITDLBaseVisitor
 import com.itsert.core.scriptengine.parser.ITDLParser
@@ -13,14 +15,21 @@ import com.itsert.exceptions.RuntimeError
 import org.antlr.v4.runtime.Token
 import java.lang.IllegalStateException
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.Test
+import java.lang.StringBuilder
+import kotlin.math.abs
 
-class Interpreter : ITDLBaseVisitor<Any>() {
+class Interpreter(private val filename:String) : ITDLBaseVisitor<Any>() {
     private var currentScope: Scope
     private val globalScope = Scope()
+    private var paddingLength = 0
 
     init {
         currentScope = globalScope
+        bakeFunctions()
+    }
+
+    private fun bakeFunctions(){
+        currentScope.define("request", HttpFunction())
     }
 
     override fun visitScript(ctx: ITDLParser.ScriptContext?): Any {
@@ -40,7 +49,6 @@ class Interpreter : ITDLBaseVisitor<Any>() {
         return ReturnTypes.NONE
     }
 
-    @Test
     override fun visitStmtAssert(ctx: ITDLParser.StmtAssertContext?): Any {
         assertThat((visit(ctx?.assertionExpr()) as BooleanExpression).value).isEqualTo(true)
         return ReturnTypes.NONE
@@ -133,7 +141,7 @@ class Interpreter : ITDLBaseVisitor<Any>() {
         if(ctx!!.dependencesOptions().text == "services"){
             val services = ctx.stringList().ID().map {  it.text}
             Project.run {
-                instance.startServices(services, ctx.start)
+                paddingLength = instance.startServices(services, ctx.start)
             }
         }
         return ReturnTypes.NONE
@@ -177,7 +185,7 @@ class Interpreter : ITDLBaseVisitor<Any>() {
                 arguments.add(visit(it) as Expression)
             }
         }
-        if(function is FunctionExpression){
+        if(function is Callable){
             if(arguments.size != function.arity()){
                 throw RuntimeError(
                         "Expected ${function.arity()} arguments but got ${arguments.size} .",
@@ -200,7 +208,7 @@ class Interpreter : ITDLBaseVisitor<Any>() {
     }
 
     override fun visitTestDclrExpr(ctx: ITDLParser.TestDclrExprContext?): Any {
-        println(ctx?.ID()?.text ?: ctx?.STRING()?.text)
+        ILogger.log("$filename -> ${ctx?.ID()?.text ?: ctx?.STRING()?.text}")
         return visit(ctx?.block())
     }
 
@@ -436,7 +444,12 @@ class Interpreter : ITDLBaseVisitor<Any>() {
     }
 
     override fun visitPrintExpr(ctx: ITDLParser.PrintExprContext?): Any {
-        ILogger.log(visit(ctx!!.expr()))
+        val builder = StringBuilder(filename)
+        val idx = abs(builder.length - paddingLength)
+        for (i in 0..idx){
+            builder.append(" ")
+        }
+        ILogger.log("$builder  |${visit(ctx!!.expr())}")
         return ReturnTypes.NONE
     }
 

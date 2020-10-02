@@ -18,6 +18,7 @@ import com.itsert.logger.LogPresenter
 import com.itsert.resources.network.Network
 import com.itsert.utils.FileUtils
 import com.itsert.utils.Utils
+import com.itsert.utils.Utils.Companion.DEFAULT_NETWORK
 import com.itsert.utils.Utils.Companion.NAMESPACE
 import io.fabric8.kubernetes.api.model.Pod
 import io.fabric8.kubernetes.client.DefaultKubernetesClient
@@ -37,6 +38,7 @@ import kotlin.system.exitProcess
 class Project private constructor(){
     private val dockerClient: DockerClient
     private val kubernetesClient: KubernetesClient
+    private var services: MutableMap<String, Service>
     init {
         val standard = DefaultDockerClientConfig.createDefaultConfigBuilder()
                 .build()
@@ -47,6 +49,7 @@ class Project private constructor(){
                 .build()
         dockerClient = DockerClientImpl.getInstance(standard, httpClient)
         kubernetesClient =  DefaultKubernetesClient()
+        services = mutableMapOf()
     }
 
     private object HOLDER {
@@ -56,8 +59,6 @@ class Project private constructor(){
     companion object : KLogging() {
         val instance: Project by lazy { HOLDER.INSTANCE }
     }
-
-    private lateinit var services: MutableMap<String, Service>
     private lateinit var defaultNetwork: Network
 
     fun run() = try {
@@ -74,7 +75,7 @@ class Project private constructor(){
         }
     }
 
-    fun startServices(names: List<String>, token: Token){
+    fun startServices(names: List<String>, token: Token): Int{
         logger.info("Starting services $names")
         names.forEach {
             if(services.containsKey(it))
@@ -82,7 +83,7 @@ class Project private constructor(){
             else
                 throw RuntimeError("$it is not a registered service", token)
         }
-        attachLoggerAndWait(kubernetesClient)
+        return attachLoggerAndWait(kubernetesClient)
     }
 
     private fun getLongestNameLengthAndPodColor(client: KubernetesClient): Pair<Int, Map<String, LogColor>>{
@@ -98,7 +99,7 @@ class Project private constructor(){
         return Pair(nameLength, colorMap)
     }
 
-    private fun attachLoggerAndWait(client: KubernetesClient){
+    private fun attachLoggerAndWait(client: KubernetesClient): Int{
         var podProperties = getLongestNameLengthAndPodColor(client)
         client.pods().inNamespace(NAMESPACE).list().items.forEach {
             client.pods()
@@ -106,8 +107,8 @@ class Project private constructor(){
                     .withName(it.metadata.name)
                     .watchLog(
                             LogPresenter(it.metadata.name,
-                                    podProperties.first + 3,
-                                    podProperties.second[it.metadata.name] ?: LogColor.BLACK,
+                                    podProperties.first + 2,
+                                    podProperties.second[it.metadata.name] ?: LogColor.randomColor(),
                                     System.out
                             )
                     )
@@ -116,7 +117,7 @@ class Project private constructor(){
                 .withName(it.metadata.name)
                 .waitUntilCondition({ r: Pod -> r.status.phase == "Running"  }, 15, TimeUnit.MINUTES)
         }
-
+        return podProperties.first
     }
 
     private fun runAppConfigs() {
@@ -127,8 +128,6 @@ class Project private constructor(){
             }
             val file = File(path)
             val configuration = parser.parse(file)
-
-            services = mutableMapOf()
 
             logger.info("Creating Default Network")
             createDefaultNetwork(kubernetesClient,  configuration.services!!)
@@ -152,6 +151,8 @@ class Project private constructor(){
     private fun createDefaultNetwork(client: KubernetesClient, config: Map<String, ServiceConfiguration>){
         defaultNetwork = Network.create(client, config)
         defaultNetwork.connect()
+
+        client.extensions().ingresses().inNamespace(NAMESPACE).withName(DEFAULT_NETWORK).fromServer().get().metadata.additionalProperties
     }
 
     private fun buildServices(configs: List<ServiceConfiguration>){
@@ -164,7 +165,6 @@ class Project private constructor(){
 
     private fun runScripts(){
         FileUtils.walkFilesAndFilesSubDirectories(".", listOf("itdl")) {
-            printFileDemarcation(it)
             var cs: CharStream? = null //load the file
             try {
                 cs = CharStreams.fromFileName(it)
@@ -176,12 +176,8 @@ class Project private constructor(){
             val parser = ITDLParser(stream)
             val tree: ParseTree = parser.script() // parse the content and get the tree
 
-            val interpreter = Interpreter()
+            val interpreter = Interpreter(it.substring(it.lastIndexOf(File.separator) + 1))
             interpreter.visit(tree)
         }
-    }
-
-    private fun printFileDemarcation(filename: String){
-        println(filename)
     }
 }

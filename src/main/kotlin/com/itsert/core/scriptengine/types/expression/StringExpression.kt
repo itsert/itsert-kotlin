@@ -4,7 +4,7 @@ import com.itsert.utils.StringUtils
 import com.itsert.exceptions.RuntimeError
 import org.antlr.v4.runtime.Token
 
-class StringExpression(override var value: String, override val token: Token)
+class StringExpression(override var value: String, override val token: Token?=null)
     : Expression(value, "String", token) {
     init {
         value = StringUtils.stripQuotes(value)

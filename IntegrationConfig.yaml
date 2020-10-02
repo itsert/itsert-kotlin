@@ -5,6 +5,9 @@ services:
     replica: 1
     ports:
       - "8080:8080"
+    environment:
+      - PORT = 80
+      - URL = "123:3j3j3j3jjjj"
   hell:
     image: errm/cheese:stilton
     replica: 1

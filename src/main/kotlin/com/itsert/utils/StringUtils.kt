@@ -4,9 +4,11 @@ class StringUtils {
     companion object{
         fun stripQuotes(string: String): String{
             var value = string
-            if(value.length > 1 && value.startsWith("\""))
-                value = value.substring(1, value.length-1)
-            return value
+            return if(value.length > 1 && value.startsWith("\"") && value.endsWith("\""))
+                value.substring(1, value.length-1)
+            else if(value.length > 1 && value.startsWith("\'") && value.endsWith("\'"))
+                value.substring(1, value.length-1)
+            else value
         }
     }
 }

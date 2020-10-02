@@ -1,6 +1,7 @@
 package com.itsert.core
 
 import com.itsert.configuration.ServiceConfiguration
+import com.itsert.utils.Utils
 import com.itsert.utils.Utils.Companion.NAMESPACE
 import com.itsert.utils.Utils.Companion.splitPortPair
 import io.fabric8.kubernetes.api.model.*
@@ -9,7 +10,6 @@ import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder
 import io.fabric8.kubernetes.client.DefaultKubernetesClient
 import io.fabric8.kubernetes.client.KubernetesClient
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 
 class Service private constructor(
@@ -53,6 +53,18 @@ class Service private constructor(
                     .endStatus().build()
 
         }
+
+        private fun populateEnvironmentVariables(config: ServiceConfiguration): List<EnvVar>{
+            val envVars = mutableListOf<EnvVar>()
+            config.environment?.forEach {
+                val envVar = EnvVar()
+                val pair = Utils.splitEnvPair(it)
+                envVar.name = pair.first
+                envVar.value = pair.second
+                envVars.add(envVar)
+            }
+            return envVars
+        }
         private fun createDeployment(config: ServiceConfiguration): Deployment{
             val containerPorts = mutableListOf<ContainerPort>()
             config.ports?.forEach {
@@ -64,6 +76,7 @@ class Service private constructor(
                 containerPort.protocol = "TCP"
                 containerPorts.add(containerPort)
             }
+            val envVars = populateEnvironmentVariables(config)
             return DeploymentBuilder()
                     .withNewMetadata()
                     .withName(config.name)
@@ -82,6 +95,7 @@ class Service private constructor(
                     .addNewContainer()
                     .withName(config.name)
                     .withImage(config.image)
+                    .withEnv(envVars)
                     .withPorts(containerPorts)
                     .endContainer()
                     .endSpec()

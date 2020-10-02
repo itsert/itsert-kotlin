@@ -36,6 +36,10 @@ var list = ["Cow", "Dog"];
 for(i in list){
     print i;
 }
+print "Http Request";
+print request("http://192.168.64.2/echoserver");
+print request("http://192.168.64.2/hell");
+print request("http://192.168.64.2/web");
 
 test "Let the cows come"{
     print "Hello";

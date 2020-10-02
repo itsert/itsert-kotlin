@@ -19,10 +19,19 @@ class Utils {
         fun splitPair(string: String): Pair<String, String>{
             val pair = string.split(":(?=(?:[^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*\$)")
             if(pair.size != 2){
-                throw InvalidPairException("Invalid key/value pair")
+                throw InvalidPairException("Invalid key/value pair $pair")
             }
             return Pair(pair[0], pair[1])
         }
+        fun splitEnvPair(string: String): Pair<String, String>{
+            val regex = "(\\w+)[\\s]*[=|:][\\s]*((?:[^\"'\\s]+)|'(?:[^']*)'|\"(?:[^\"]*)\")".toRegex()
+            val pair = regex.matchEntire(string)?.groupValues
+            if(pair== null || pair.size != 3){
+                throw InvalidPairException("Invalid key/value pair $pair")
+            }
+            return Pair(StringUtils.stripQuotes(pair[1]), StringUtils.stripQuotes(pair[2]))
+        }
+
 
         fun splitPortPair(string: String): Pair<String, String>{
             val pair = string.split(":")
