@@ -1,4 +1,4 @@
-// Generated from /Users/opefago/Documents/projects/itsert/src/main/kotlin/com/opefago/core/integrationscript/grammar/ITDL.g4 by ANTLR 4.8
+// Generated from /Users/opefago/Documents/projects/itsert/src/main/kotlin/com/itsert/core/scriptengine/grammar/ITDL.g4 by ANTLR 4.8
 package com.itsert.core.scriptengine.parser;
 import org.antlr.v4.runtime.tree.ParseTreeVisitor;
 
@@ -154,6 +154,12 @@ public interface ITDLVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitFunctionCall(ITDLParser.FunctionCallContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ITDLParser#prototypeExpr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitPrototypeExpr(ITDLParser.PrototypeExprContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link ITDLParser#functionCallParameters}.
 	 * @param ctx the parse tree
@@ -344,6 +350,13 @@ public interface ITDLVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitExprLt(ITDLParser.ExprLtContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ProtoExpr}
+	 * labeled alternative in {@link ITDLParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitProtoExpr(ITDLParser.ProtoExprContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code ExprOr}
 	 * labeled alternative in {@link ITDLParser#expr}.

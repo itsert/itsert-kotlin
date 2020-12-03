@@ -1,4 +1,4 @@
-// Generated from /Users/opefago/Documents/projects/itsert/src/main/kotlin/com/opefago/core/integrationscript/grammar/ITDL.g4 by ANTLR 4.8
+// Generated from /Users/opefago/Documents/projects/itsert/src/main/kotlin/com/itsert/core/scriptengine/grammar/ITDL.g4 by ANTLR 4.8
 package com.itsert.core.scriptengine.parser;
 
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -275,6 +275,18 @@ public class ITDLBaseListener implements ITDLListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitFunctionCall(ITDLParser.FunctionCallContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterPrototypeExpr(ITDLParser.PrototypeExprContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitPrototypeExpr(ITDLParser.PrototypeExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -623,6 +635,18 @@ public class ITDLBaseListener implements ITDLListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitExprLt(ITDLParser.ExprLtContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterProtoExpr(ITDLParser.ProtoExprContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitProtoExpr(ITDLParser.ProtoExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

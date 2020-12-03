@@ -51,3 +51,10 @@ test "Let the cows come"{
     }
     assert 2 > 1;
 }
+
+var proto = {
+    var a = 2;
+    var b = 3;
+};
+
+print proto;

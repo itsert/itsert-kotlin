@@ -23,26 +23,29 @@ returnStmt: RETURN expr?;
 dependencesDclrExpr
     :   DEPENDS ON dependencesOptions  stringList?;
 
-stringList :  Id (',' Id)*;
+stringList :  ID (',' ID)*;
 
 varDeclare: VAR subDeclare SEMI;
-subDeclare: Id (ASSIGN expr)?;
+subDeclare: ID (ASSIGN expr)?;
 
 dependencesOptions
     :   (SERVICES);
 
-functionCall: Id L_PAREN functionCallParameters? R_PAREN;
+functionCall: ID L_PAREN functionCallParameters? R_PAREN;
 
-functionCallParameters: ((Id | expr) (COMMA (Id | expr))*);
+prototypeExpr: L_CURLY (varDeclare | functionDclrExpr )* R_CURLY;
+prototypeCall: ID (DOT (ID | functionCall))*;
+
+functionCallParameters: ((ID | expr) (COMMA (ID | expr))*);
 
 functionDclrExpr
-    :   FUNCTION Id L_PAREN formalParamters? R_PAREN block
+    :   FUNCTION ID L_PAREN formalParamters? R_PAREN block
     ;
-formalParamters: (Id (COMMA Id)*);
+formalParamters: (ID (COMMA ID)*);
 
 testDclrExpr
-    :   TEST (Id | STRING) block
-    |   SCENERIO (Id | STRING) block
+    :   TEST (ID | STRING) block
+    |   SCENERIO (ID | STRING) block
     ;
 
 setupStmt
@@ -59,19 +62,19 @@ conditionalExpr
     ;
 
 whileStatement: WHILE L_PAREN expr R_PAREN thenStatement;
-forStatement   : FOR L_PAREN Id IN (rangeExpr | list| Id | STRING) R_PAREN thenStatement ;
+forStatement   : FOR L_PAREN ID IN (rangeExpr | list| ID | STRING) R_PAREN thenStatement ;
 
 elseCondition: ELSE (IF  L_PAREN expr R_PAREN)? elseStatement;
 thenStatement:  ( block | statement);
 elseStatement: ( block | statement);
 expr
     :   L_PAREN expr R_PAREN #ExprParen
-    |   Id  #ExprRef
+    |   ID  #ExprRef
     |   INT #ExprInt
     |   NUMBER  #ExprNum
     |   STRING  #ExprStr
     |   rangeExpr  #ExprRange
-    |   Id L_SQUARE INT R_SQUARE #ExprListIndex
+    |   ID L_SQUARE INT R_SQUARE #ExprListIndex
     |   subDeclare #ExprReAssign
     |   expr ('*'|'/') expr #ExprMultDiv
     |   expr ('+'|'-') expr #ExprAddSub
@@ -87,11 +90,12 @@ expr
     |   expr 'or' expr  #ExprOr
     |   ('not' | '!') expr  #ExprNot
     |   functionCall    #ExprFunCall
+    |   prototypeExpr   #ProtoExpr
     ;
 rangeExpr: INT ELLIPSIS INT;
 list    : L_SQUARE (value (COMMA value)*)? R_SQUARE
     ;
-value: (INT | NUMBER| BOOL| STRING| Id);
+value: (INT | NUMBER| BOOL| STRING| ID);
 bool
     :    (TRUE | FALSE);
 
@@ -138,6 +142,7 @@ SETUP   :   S E T U P;
 TEARDOWN: T E A R D O W N;
 RETURN: R E T U R N;
 BOOL: (TRUE | FALSE);
+ID  : [a-zA-Z]+;
 
 ALPHA   :  [a-zA-Z];
 STRING: '"' (Esc|.)*? '"';
@@ -161,7 +166,7 @@ NEWLINE :   ('\r'? '\n') -> channel(HIDDEN);
 WS      :   [ \t\r\n]    -> channel(HIDDEN);
 LINE_COMMENT    : '//'  ~[\r\n]* -> channel(HIDDEN);
 BLOCK_COMMENT   : '/*'  (.)*? '*/' -> channel(HIDDEN);
-fragment Id  : ('-' | '_'| ALPHA)+;
+
 fragment Esc
     : '\\' [btnfr"'\\]
     | '\\' ([0-3]? [0-7])? [0-7]

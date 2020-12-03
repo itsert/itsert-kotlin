@@ -1,4 +1,4 @@
-// Generated from /Users/opefago/Documents/projects/itsert/src/main/kotlin/com/opefago/core/integrationscript/grammar/ITDL.g4 by ANTLR 4.8
+// Generated from /Users/opefago/Documents/projects/itsert/src/main/kotlin/com/itsert/core/scriptengine/grammar/ITDL.g4 by ANTLR 4.8
 package com.itsert.core.scriptengine.parser;
 import org.antlr.v4.runtime.tree.AbstractParseTreeVisitor;
 
@@ -165,6 +165,13 @@ public class ITDLBaseVisitor<T> extends AbstractParseTreeVisitor<T> implements I
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
 	@Override public T visitFunctionCall(ITDLParser.FunctionCallContext ctx) { return visitChildren(ctx); }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.</p>
+	 */
+	@Override public T visitPrototypeExpr(ITDLParser.PrototypeExprContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -368,6 +375,13 @@ public class ITDLBaseVisitor<T> extends AbstractParseTreeVisitor<T> implements I
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
 	@Override public T visitExprLt(ITDLParser.ExprLtContext ctx) { return visitChildren(ctx); }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.</p>
+	 */
+	@Override public T visitProtoExpr(ITDLParser.ProtoExprContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *

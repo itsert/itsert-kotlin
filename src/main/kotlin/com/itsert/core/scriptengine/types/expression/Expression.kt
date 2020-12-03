@@ -48,10 +48,10 @@ abstract class Expression(
     open operator fun contains(expression: Expression): Boolean{
         throw RuntimeError("List operation cannot be performed on $name", token)
     }
-    open operator fun get(expression: Int): Expression{
+    open operator fun get(expression: String): Any{
         throw RuntimeError("List get operation cannot be performed on $name", token)
     }
-    open operator fun set(expression1: Int, expression2: Expression): Expression{
+    open operator fun set(expression1: String, expression2: Expression): Expression{
         throw RuntimeError("Addition operation cannot be performed on $name", token)
     }
 

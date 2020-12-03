@@ -1,4 +1,4 @@
-// Generated from /Users/opefago/Documents/projects/itsert/src/main/kotlin/com/opefago/core/integrationscript/grammar/ITDL.g4 by ANTLR 4.8
+// Generated from /Users/opefago/Documents/projects/itsert/src/main/kotlin/com/itsert/core/scriptengine/grammar/ITDL.g4 by ANTLR 4.8
 package com.itsert.core.scriptengine.parser;
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 
@@ -251,6 +251,16 @@ public interface ITDLListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitFunctionCall(ITDLParser.FunctionCallContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link ITDLParser#prototypeExpr}.
+	 * @param ctx the parse tree
+	 */
+	void enterPrototypeExpr(ITDLParser.PrototypeExprContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ITDLParser#prototypeExpr}.
+	 * @param ctx the parse tree
+	 */
+	void exitPrototypeExpr(ITDLParser.PrototypeExprContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link ITDLParser#functionCallParameters}.
 	 * @param ctx the parse tree
@@ -573,6 +583,18 @@ public interface ITDLListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitExprLt(ITDLParser.ExprLtContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code ProtoExpr}
+	 * labeled alternative in {@link ITDLParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void enterProtoExpr(ITDLParser.ProtoExprContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ProtoExpr}
+	 * labeled alternative in {@link ITDLParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void exitProtoExpr(ITDLParser.ProtoExprContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code ExprOr}
 	 * labeled alternative in {@link ITDLParser#expr}.

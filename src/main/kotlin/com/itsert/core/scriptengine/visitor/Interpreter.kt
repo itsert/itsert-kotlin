@@ -464,4 +464,12 @@ class Interpreter(private val filename:String) : ITDLBaseVisitor<Any>() {
         }
         throw ReturnException(expression)
     }
+
+    override fun visitPrototypeExpr(ctx: ITDLParser.PrototypeExprContext?): Any {
+        return PrototypeExpression(ctx!!.start, ctx, currentScope)
+    }
+
+    override fun visitProtoExpr(ctx: ITDLParser.ProtoExprContext?): Any {
+        return visit(ctx!!.prototypeExpr())
+    }
 }
