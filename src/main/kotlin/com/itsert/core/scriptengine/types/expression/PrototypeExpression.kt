@@ -42,6 +42,6 @@ class PrototypeExpression(
         throw RuntimeError("undefined property '$expression'", token)
     }
     override operator fun set(expression1: String, expression2: Expression): Expression{
-        fields[expression1] = expression2
+//        fields[expression1] = expression2
     }
 }

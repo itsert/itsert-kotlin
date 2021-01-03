@@ -23,11 +23,8 @@ gradle-app.setting
 
 # Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
 !gradle-wrapper.jar
-kudi_core_env.sh
 running.pid
 nohup.out
-kudi_core_prod_env.sh
-kudi_core_staging_env.sh
 helper.sh
 .env
 env.txt
