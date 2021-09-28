@@ -35,13 +35,14 @@ class PrototypeExpression(
         return "<prototype ${ctx.start.text}>"
     }
 
-    override operator fun get(expression: String): Any{
+    override operator fun get(expression: Any): Any{
         if(fields.contains(expression)){
             return fields[expression]!!
         }
         throw RuntimeError("undefined property '$expression'", token)
     }
-    override operator fun set(expression1: String, expression2: Expression): Expression{
+    override operator fun set(expression1: Any, expression2: Expression): Expression{
 //        fields[expression1] = expression2
+        throw RuntimeError("undefined property '$expression1'", token)
     }
 }
