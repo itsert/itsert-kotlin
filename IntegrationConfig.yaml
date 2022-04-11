@@ -1,0 +1,20 @@
+version: "3"
+services:
+  echoserver:
+    image: gcr.io/google_containers/echoserver:1.4
+    replica: 1
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT = 80
+      - URL = "123:3j3j3j3jjjj"
+  hell:
+    image: errm/cheese:stilton
+    replica: 1
+    ports:
+      - "8000:80"
+  web:
+    image: gcr.io/kubernetes-e2e-test-images/echoserver:2.1
+    replica: 1
+    ports:
+      - "8080:8080"

@@ -1,0 +1,60 @@
+depends on services hell, echoserver, web;
+
+var a = 10 + 1;
+print a + 1;
+a;
+print a;
+a = 2;
+print a;
+print "Hello world";
+
+if(true){
+    print "it is true";
+}
+
+if(false) print "fail silently";
+else if(false) print "Would this run";
+else if(false) print "I bet this would run instead";
+else print "Coming home Johny";
+
+fun sum(a, b){
+    return a + b;
+}
+
+fun sayHello(){
+    if(false) print "Hello conditional";
+    print "hello";
+}
+
+print sum(23, 5);
+
+for(i in "How are you doing "){
+    print i;
+}
+
+var list = ["Cow", "Dog"];
+for(i in list){
+    print i;
+}
+print "Http Request";
+print request("http://192.168.64.2/echoserver");
+print request("http://192.168.64.2/hell");
+print request("http://192.168.64.2/web");
+
+test "Let the cows come"{
+    print "Hello";
+    if(true) print "I am always true";
+    var i = 0;
+    while ( i < 10){
+        print i;
+        i = i + 1;
+    }
+    assert 2 > 1;
+}
+
+var proto = {
+    var a = 2;
+    var b = 3;
+};
+
+print proto;
